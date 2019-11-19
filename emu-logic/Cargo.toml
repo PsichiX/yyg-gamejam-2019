@@ -1,0 +1,21 @@
+[package]
+name = "emu-logic"
+version = "0.1.0"
+authors = ["Patryk 'PsichiX' Budzynski <psichix@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+kaiju-core = "0.1.4"
+kaiju-compiler-core = "0.1.4"
+kaiju-vm-core = "0.1.4"
+lazy_static = "1.4"
+relative-path = "1.0"
+libc = "0.2"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+rand ="0.7"
+
+[lib]
+name = "emu_logic_capi"
+crate-type = ["cdylib", "staticlib"]

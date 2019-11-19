@@ -1,0 +1,7 @@
+#![auto_integer_type('i16')];
+
+export fn main() {
+  svp 1 2;
+  ssi 42 3;
+  ssp 42 4 5;
+}

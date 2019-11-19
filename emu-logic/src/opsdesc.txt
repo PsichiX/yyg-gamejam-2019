@@ -1,0 +1,86 @@
+// tells machine to stop processing and let it render screen.
+halt {}
+
+// go to label.
+goto label: *u8 {}
+
+// if-else
+if test: i16 then: *u8 else: *u8 {}
+
+// immediately returns from function.
+ret {}
+
+// drops value (mostly used when calling a function without return type).
+pass v: $? {}
+
+// debug values.
+dbgi v: i16 {}
+dbgs v: *u8 {}
+dbgp v: *$? {}
+dbgm addr: *$? size: i16 {}
+
+// casts pointer from one type to another.
+cstp addr: *$? => *$? {}
+
+// offsets pointer by N bytes.
+poff addr: *$? offset: i16 => *$? {}
+
+// converts integer to byte.
+i2b v: i16 => u8 {}
+
+// converts byte to integer.
+b2i v: u8 => i16 {}
+
+// alloc N bytes on heap.
+allc size: i16 => *$? {}
+
+// dealloc memory block from heap.
+free address: *$? {}
+
+// gets currently hold buttons as flags.
+inp => i16 {}
+
+// bg color.
+bgc r: i16 g: i16 b: i16 {}
+
+// viewport position
+svp x: i16 y: i16 {}
+gvp => i16 i16 {}
+
+// sprite image index
+ssi idx: i16 img: i16 {}
+gsi idx: i16 => i16 {}
+
+// sprite position
+ssp idx: i16 x: i16 y: i16 {}
+gsp idx: i16 => i16 i16 {}
+
+// sprites collision detection
+coll first: i16 second: i16 => i16 {}
+
+// boolean
+bor a: i16 b: i16 => i16 {}
+band a: i16 b: i16 => i16 {}
+
+// arithmetics
+inc v: i16 => i16 {}
+dec v: i16 => i16 {}
+add a: i16 b: i16 => i16 {}
+sub a: i16 b: i16 => i16 {}
+mul a: i16 b: i16 => i16 {}
+div a: i16 b: i16 => i16 {}
+mod a: i16 b: i16 => i16 {}
+mov v: i16 => i16 {}
+eq a: i16 b: i16 => i16 {}
+ne a: i16 b: i16 => i16 {}
+gt a: i16 b: i16 => i16 {}
+lt a: i16 b: i16 => i16 {}
+ge a: i16 b: i16 => i16 {}
+le a: i16 b: i16 => i16 {}
+lsh a: i16 b: i16 => i16 {}
+rsh a: i16 b: i16 => i16 {}
+and a: i16 b: i16 => i16 {}
+or a: i16 b: i16 => i16 {}
+xor a: i16 b: i16 => i16 {}
+neg v: i16 => i16 {}
+rnd => i16 {}

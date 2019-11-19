@@ -1,0 +1,181 @@
+#![auto_integer_type('i16')];
+
+<
+  PHASE_ACCUM: i16,
+  PHASE_ACCUM_LIMIT: i16,
+  PHASE: i16,
+  GAME_OVER: i16,
+  JUMP_MODE: i16,
+  JUMP_ACCUM: i16,
+  ACCELERATION_ACCUM: i16,
+  ACCELERATION_DELAY: i16,
+  SCORE: i16,
+>
+
+export fn main() <i: i16, input: i16, x: i16, y: i16> {
+  ssp 125 10 10;
+
+  mov 0 => i;
+place_loop:
+  if !<lt i 45> 'place' 'place_pass';
+place:
+  ssp !<add i 10> !<add 1 !<mul 2 !<mod i 9>>> !<add 1 !<mul 2 !<div i 9>>>;
+  inc i => i;
+  goto 'place_loop';
+place_pass:
+
+  pass @<init()>;
+
+loop:
+  inp => input;
+  if GAME_OVER 'on_game_over' 'update';
+on_game_over:
+  if !<and input 16> 'restart' 'inc_phase_pass';
+restart:
+  pass @<init()>;
+update:
+  gsp 127 => x y;
+  if !<band !<eq JUMP_MODE 0> !<band !<and input 1> !<eq y 18>>> 'jump' 'jump_pass';
+jump:
+  mov 1 => JUMP_MODE;
+  mov 12 => JUMP_ACCUM;
+jump_pass:
+  inc PHASE_ACCUM => PHASE_ACCUM;
+  if !<ge PHASE_ACCUM PHASE_ACCUM_LIMIT> 'inc_phase' 'inc_phase_pass';
+inc_phase:
+  inc PHASE => PHASE;
+  mov 0 => PHASE_ACCUM;
+  pass @<jumping()>;
+  pass @<tick()>;
+inc_phase_pass:
+
+  halt;
+  goto 'loop';
+}
+
+fn init() <i: i16> {
+  bgc 0x5F 0xC8 0xF0;
+  mov 0 => i;
+clear_loop:
+  if !<lt i SCORE> 'clear' 'clear_pass';
+clear:
+  ssi !<add i 10> -1;
+  inc i => i;
+  goto 'clear_loop';
+clear_pass:
+
+  mov 0 => PHASE_ACCUM;
+  mov 8 => PHASE_ACCUM_LIMIT;
+  mov 0 => PHASE;
+  mov 0 => GAME_OVER;
+  mov 0 => JUMP_MODE;
+  mov 0 => JUMP_ACCUM;
+  mov 15 => ACCELERATION_DELAY;
+  mov ACCELERATION_DELAY => ACCELERATION_ACCUM;
+  mov -1 => SCORE;
+
+  ssi 0 0;
+  ssi 1 0;
+  ssi 2 0;
+  ssi 127 1;
+  ssp 127 0 18;
+  ssi 125 -1;
+
+  pass @<reset_enemy()>;
+}
+
+fn reset_enemy() {
+  ssi 126 !<add 3 !<mod !<and !<rnd> 0x7FFF> 2>>;
+  ssp 126 !<add 24 !<mod !<and !<rnd> 0x7FFF> 16>> 18;
+  mov @<min(!<inc SCORE>, 45)> => SCORE;
+}
+
+fn tick() <x: i16, y: i16> {
+  // move background.
+  ssp 0 !<sub 32 !<mod PHASE 48>> 20;
+  ssp 1 !<sub 32 !<mod !<add PHASE 16> 48>> 20;
+  ssp 2 !<sub 32 !<mod !<add PHASE 32> 48>> 20;
+  // animate dino.
+  ssi 127 !<add !<mod PHASE 2> 1>;
+
+  // respond to collision.
+  gsp 127 => x y;
+  if !<band !<eq y 18> !<coll 127 126>> 'collide' 'collide_pass';
+collide:
+  pass @<game_over()>;
+collide_pass:
+
+  // move obstacle.
+  gsp 126 => x y;
+  if !<lt x -8> 'reset' 'reset_pass';
+reset:
+  pass @<reset_enemy()>;
+  goto 'exit';
+reset_pass:
+  ssp 126 !<sub x 1> y;
+exit:
+
+  dec ACCELERATION_ACCUM => ACCELERATION_ACCUM;
+  if !<le ACCELERATION_ACCUM 0> 'accelerate' 'accelerate_pass';
+accelerate:
+  mov @<max(!<dec PHASE_ACCUM_LIMIT>, 0)> => PHASE_ACCUM_LIMIT;
+  add 15 ACCELERATION_DELAY => ACCELERATION_DELAY;
+  mov ACCELERATION_DELAY => ACCELERATION_ACCUM;
+accelerate_pass:
+}
+
+fn jumping() <x: i16, y: i16> {
+  if JUMP_MODE 'go_up' 'go_down';
+go_up:
+  if !<gt JUMP_ACCUM 0> 'move_up' 'disable';
+move_up:
+  gsp 127 => x y;
+  ssp 127 x !<dec y>;
+  dec JUMP_ACCUM => JUMP_ACCUM;
+  goto 'exit';
+disable:
+  mov 0 => JUMP_MODE;
+  goto 'exit';
+go_down:
+  gsp 127 => x y;
+  ssp 127 x @<min(!<inc y>, 18)>;
+exit:
+}
+
+fn game_over() <i: i16> {
+  bgc 0x00 0x00 0x00;
+  mov 1 => GAME_OVER;
+  ssi 0 -1;
+  ssi 1 -1;
+  ssi 2 -1;
+  ssi 126 -1;
+  ssi 127 -1;
+  ssi 125 5;
+
+  mov 0 => i;
+show_loop:
+  if !<lt i SCORE> 'show' 'show_pass';
+show:
+  ssi !<add i 10> 6;
+  inc i => i;
+  goto 'show_loop';
+show_pass:
+}
+
+fn min(a: i16, b: i16): i16 {
+  if !<lt a b> 'a' 'b';
+a:
+  mov a => _;
+  ret;
+b:
+  mov b => _;
+}
+
+fn max(a: i16, b: i16): i16 {
+  if !<gt a b> 'a' 'b';
+a:
+  mov a => _;
+  ret;
+b:
+  mov b => _;
+}

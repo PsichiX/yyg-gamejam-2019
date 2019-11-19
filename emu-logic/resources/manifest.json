@@ -1,0 +1,13 @@
+{
+  "images": [
+    {
+      "x": 0,
+      "y": 1,
+      "w": 2,
+      "h": 3,
+      "ox": -1,
+      "oy": -2
+    }
+  ],
+  "code_entry_path": "main.kj"
+}
