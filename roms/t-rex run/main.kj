@@ -70,7 +70,7 @@ clear_pass:
   mov 0 => GAME_OVER;
   mov 0 => JUMP_MODE;
   mov 0 => JUMP_ACCUM;
-  mov 15 => ACCELERATION_DELAY;
+  mov 10 => ACCELERATION_DELAY;
   mov ACCELERATION_DELAY => ACCELERATION_ACCUM;
   mov -1 => SCORE;
 
@@ -118,8 +118,8 @@ exit:
   dec ACCELERATION_ACCUM => ACCELERATION_ACCUM;
   if !<le ACCELERATION_ACCUM 0> 'accelerate' 'accelerate_pass';
 accelerate:
-  mov @<max(!<dec PHASE_ACCUM_LIMIT>, 0)> => PHASE_ACCUM_LIMIT;
-  add 15 ACCELERATION_DELAY => ACCELERATION_DELAY;
+  mov @<max(!<dec PHASE_ACCUM_LIMIT>, 1)> => PHASE_ACCUM_LIMIT;
+  mul 2 ACCELERATION_DELAY => ACCELERATION_DELAY;
   mov ACCELERATION_DELAY => ACCELERATION_ACCUM;
 accelerate_pass:
 }
