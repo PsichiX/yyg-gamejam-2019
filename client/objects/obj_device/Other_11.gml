@@ -1,4 +1,4 @@
-/// @description release resources
+/// @description try release resources
 
 if self.atlas_sprite >= 0 {
 	sprite_delete(self.atlas_sprite);

@@ -1,0 +1,357 @@
+#![auto_integer_type('i16')];
+
+<
+  PHASE_ACCUM: i16,
+  PHASE: i16,
+  MARBLES_PHASE_ACCUM: i16,
+  MARBLES_PHASE: i16,
+  MARBLES_LEFT: i16,
+  GAME_OVER: i16,
+  FIRE: i16,
+  PATH_COUNT: i16,
+>
+
+export fn main() <input: i16> {
+  mul 17 6 => PATH_COUNT;
+  pass @<init()>;
+
+loop:
+  inp => input;
+  if GAME_OVER 'on_game_over' 'update';
+on_game_over:
+  if !<and input 16> 'restart' 'inc_marbles_phase_pass';
+restart:
+  pass @<init()>;
+update:
+  inc PHASE_ACCUM => PHASE_ACCUM;
+  if !<ge PHASE_ACCUM 4> 'inc_phase' 'inc_phase_pass';
+inc_phase:
+  inc PHASE => PHASE;
+  mov 0 => PHASE_ACCUM;
+  pass @<tick()>;
+inc_phase_pass:
+
+  inc MARBLES_PHASE_ACCUM => MARBLES_PHASE_ACCUM;
+  if !<and input 32> 'inc_marbles_phase' 'try_inc_marbles_phase';
+try_inc_marbles_phase:
+  if !<ge MARBLES_PHASE_ACCUM 60> 'inc_marbles_phase' 'inc_marbles_phase_pass';
+inc_marbles_phase:
+  inc MARBLES_PHASE => MARBLES_PHASE;
+  mov 0 => MARBLES_PHASE_ACCUM;
+  pass @<tick_marbles()>;
+inc_marbles_phase_pass:
+
+  halt;
+  goto 'loop';
+}
+
+fn setup_path() <i: i16, s: i16> {
+  mov 0 => i;
+loop:
+  if !<lt i PATH_COUNT> 'continue' 'loop_pass';
+continue:
+  inc i => s;
+  ssi s 8;
+  ssp s !<add 2 @<calc_path_x(i)>> !<add 2 @<calc_path_y(i)>>;
+  mov s => i;
+  goto 'loop';
+loop_pass:
+}
+
+fn init() <i: i16, last: i16> {
+  pass @<setup_path()>;
+
+  mov 0 => PHASE_ACCUM;
+  mov 0 => PHASE;
+  mov 0 => MARBLES_PHASE_ACCUM;
+  mov 0 => MARBLES_PHASE;
+  mov 0 => GAME_OVER;
+  mov 0 => FIRE;
+  mov 10 => MARBLES_LEFT;
+
+  ssi 0 0;
+  ssi 110 4;
+  ssp 110 9 20;
+  ssp 111 9 18;
+  ssi 112 -1;
+  ssi 113 -1;
+  pass @<select_marble()>;
+
+  mov -1 => last;
+  mov 0 => i;
+loop:
+  if !<lt i 15> 'continue' 'loop_pass';
+continue:
+  mov @<pick_color(last)> => last;
+  ssi !<add 1 i> last;
+  inc i => i;
+  goto 'loop';
+loop_pass:
+}
+
+fn calc_score(): i16 <i: i16, s: i16> {
+  mov 0 => s;
+  mov 0 => i;
+loop:
+  if !<lt i PATH_COUNT> 'continue' 'loop_pass';
+continue:
+  inc i => i;
+  if !<ne !<gsi i> 8> 'add' 'loop';
+add:
+  inc s => s;
+  goto 'loop';
+loop_pass:
+  mov s => _;
+}
+
+fn show_points(score: i16) <i: i16, s: i16> {
+  mov 0 => i;
+loop:
+  if !<lt i score> 'continue' 'loop_pass';
+continue:
+  inc i => s;
+  ssi s 9;
+  ssp s !<add 2 @<calc_path_x(i)>> !<add 2 @<calc_path_y(i)>>;
+  mov s => i;
+  goto 'loop';
+loop_pass:
+
+  mov 0 => i;
+loop:
+  if !<lt i score> 'continue' 'loop_pass';
+continue:
+  inc i => s;
+  ssi s 9;
+  ssp s !<add 2 @<calc_path_x(i)>> !<add 2 @<calc_path_y(i)>>;
+  mov s => i;
+  goto 'loop';
+loop_pass:
+}
+
+fn game_over() <i: i16, score: i16> {
+  mov 1 => GAME_OVER;
+  ssi 0 -1;
+  ssi 110 -1;
+  ssi 111 -1;
+
+  mov @<calc_score()> => score;
+
+  ssi 112 !<inc !<gt score 0>>;
+  ssp 112 5 13;
+  ssi 113 3;
+  ssp 113 15 14;
+
+  mov 0 => i;
+hide_loop:
+  if !<lt i PATH_COUNT> 'hide' 'hide_pass';
+hide:
+  inc i => i;
+  ssi i -1;
+  goto 'hide_loop';
+hide_pass:
+
+  pass @<show_points(score)>;
+}
+
+fn tick() <input: i16, x: i16, y: i16, coll: i16> {
+  inp => input;
+
+  if !<and input 4> 'move_left' 'move_left_pass';
+move_left:
+  gsp 110 => x y;
+  ssp 110 @<max(2, !<dec x>)> y;
+move_left_pass:
+
+  if !<and input 8> 'move_right' 'move_right_pass';
+move_right:
+  gsp 110 => x y;
+  ssp 110 @<min(17, !<inc x>)> y;
+move_right_pass:
+
+  if !<and input 16> 'fire' 'fire_pass';
+fire:
+  mov 1 => FIRE;
+fire_pass:
+
+  if FIRE 'shoot' 'follow';
+shoot:
+  gsp 111 => x y;
+  dec y => y;
+  ssp 111 x y;
+  mov @<bullet_collide()> => coll;
+  if !<bor !<ge coll 0> !<lt y 0>> 'reset_bullet' 'reset_bullet_pass';
+reset_bullet:
+  mov 0 => FIRE;
+  pass @<insert_marble(coll, !<gsi 111>)>;
+  pass @<select_marble()>;
+reset_bullet_pass:
+  ret;
+follow:
+  gsp 110 => x y;
+  ssp 111 x !<sub y 3>;
+}
+
+fn tick_marbles() <i: i16, start: i16, curr: i16, last: i16, count: i16> {
+  if !<gt MARBLES_LEFT 0> 'add_color' 'add_empty';
+add_color:
+  dec MARBLES_LEFT => MARBLES_LEFT;
+  pass @<insert_marble(0, @<pick_color(!<gsi 1>)>)>;
+  goto 'add_color_pass';
+add_empty:
+  pass @<insert_marble(0, 8)>;
+add_color_pass:
+
+  mov 0 => start;
+  mov -1 => last;
+  mov 0 => count;
+  mov 0 => i;
+loop:
+  if !<lt i PATH_COUNT> 'continue' 'loop_pass';
+continue:
+  gsi !<inc i> => curr;
+  if !<eq last curr> 'same' 'different';
+same:
+  inc count => count;
+  goto 'same_pass';
+different:
+  if !<ge count 2> 'destroy' 'destroy_pass';
+destroy:
+  if !<lt start i> 'clear' 'destroy_pass';
+clear:
+  ssi !<inc start> 8;
+  inc start => start;
+  goto 'destroy';
+destroy_pass:
+  mov curr => last;
+  mov 0 => count;
+  mov i => start;
+same_pass:
+
+  inc i => i;
+  goto 'loop';
+loop_pass:
+
+  if !<bor !<ne !<gsi !<dec PATH_COUNT>> 8> !<eq @<calc_score()> 0>> 'game_over' 'game_over_pass';
+game_over:
+  pass @<game_over()>;
+game_over_pass:
+}
+
+fn insert_marble(pos: i16, sprite: i16) <i: i16, s: i16> {
+  if !<lt pos 0> 'exit' 'start';
+start:
+  mov @<find_last_movable_marble()> => s;
+  mov !<dec s> => i;
+loop:
+  if !<ge i pos> 'continue' 'loop_pass';
+continue:
+  inc i => s;
+  ssi !<inc s> !<gsi s>;
+  dec i => i;
+  goto 'loop';
+loop_pass:
+  ssi !<add i 2> sprite;
+exit:
+}
+
+fn find_first_movable_marble(): i16 <i: i16> {
+  mov 0 => i;
+loop:
+  if !<lt i !<dec PATH_COUNT>> 'continue' 'loop_pass';
+continue:
+  if !<ne !<gsi !<inc i>> 8> 'found' 'found_pass';
+found:
+  mov i => _;
+  ret;
+found_pass:
+  inc i => i;
+  goto 'loop';
+loop_pass:
+  mov PATH_COUNT => _;
+}
+
+fn find_last_movable_marble(): i16 <i: i16> {
+  mov @<find_first_movable_marble()> => i;
+loop:
+  if !<lt i !<dec PATH_COUNT>> 'continue' 'loop_pass';
+continue:
+  if !<eq !<gsi !<inc i>> 8> 'found' 'found_pass';
+found:
+  mov i => _;
+  ret;
+found_pass:
+  inc i => i;
+  goto 'loop';
+loop_pass:
+}
+
+fn pick_color(last: i16): i16 {
+  mov last => _;
+loop:
+  add 5 !<mod !<and !<rnd> 0x7FFF> 3> => _;
+  if !<eq last _> 'loop' 'loop_pass';
+loop_pass:
+}
+
+fn select_marble() <x: i16, y: i16> {
+  ssi 111 !<add 5 !<mod !<and !<rnd> 0x7FFF> 3>>;
+  gsp 110 => x y;
+  ssp 111 x !<sub y 2>;
+}
+
+fn bullet_collide(): i16 <i: i16, s: i16> {
+  mov 0 => i;
+loop:
+  if !<lt i PATH_COUNT> 'continue' 'loop_pass';
+continue:
+  inc i => s;
+  if !<band !<coll 111 s> !<ne !<gsi s> 8>> 'collide' 'collide_pass';
+collide:
+  mov i => _;
+  ret;
+collide_pass:
+  inc i => i;
+  goto 'loop';
+loop_pass:
+  mov -1 => _;
+}
+
+fn calc_path_x(i: i16): i16 <s: i16> {
+  mod !<div i 17> 2 => s;
+  mov @<min(!<mod i 17>, 15)> => i;
+  if s 'to_right' 'to_left';
+to_right:
+  mov i => _;
+  ret;
+to_left:
+  sub 15 i => _;
+}
+
+fn calc_path_y(i: i16): i16 <s: i16> {
+  div i 17 => s;
+  mod i 17 => i;
+  if !<eq i 16> 'edge' 'normal';
+edge:
+  add 1 !<mul 2 s> => _;
+  ret;
+normal:
+  mul 2 s => _;
+}
+
+fn min(a: i16, b: i16): i16 {
+  if !<lt a b> 'a' 'b';
+a:
+  mov a => _;
+  ret;
+b:
+  mov b => _;
+}
+
+fn max(a: i16, b: i16): i16 {
+  if !<gt a b> 'a' 'b';
+a:
+  mov a => _;
+  ret;
+b:
+  mov b => _;
+}

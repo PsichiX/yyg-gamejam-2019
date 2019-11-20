@@ -17,7 +17,7 @@ if emu_cpu_can_resume() {
 			emu_cpu_resume();
 			var errors = emu_last_errors();
 			if string_length(errors) > 0 {
-				show_debug_message(errors);
+				log_message(errors);
 			}
 			ct = current_time;
 		} until (!emu_cpu_can_resume() || emu_cpu_is_halt() || ct - st > 50);
@@ -61,12 +61,12 @@ if emu_cpu_can_resume() {
 				}
 				self.surface = surface_create(40, 40);
 			} else {
-				show_debug_message("Sprite atlas does not exists: " + atlas_path);
+				log_message("Sprite atlas does not exists: " + atlas_path);
 				emu_cpu_stop();
 			}
 		} else {
-			show_debug_message("Could not run ROM: " + rom);
+			log_message("Could not run ROM: " + rom);
 		}
-		show_debug_message(emu_last_errors());
+		log_message(emu_last_errors());
 	}
 }

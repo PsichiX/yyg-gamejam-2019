@@ -4,10 +4,6 @@ if emu_cpu_can_resume() {
 		if surface_exists(self.surface) {
 			surface_set_target(self.surface);
 			var col = emu_bgcolor();
-			show_debug_message("COL: " + string(col));
-			show_debug_message("R: " + string((col >> 16) & 0xff));
-			show_debug_message("G: " + string((col >> 8) & 0xff));
-			show_debug_message("B: " + string((col >> 0) & 0xff));
 			draw_clear(make_color_rgb((col >> 16) & 0xff, (col >> 8) & 0xff, col & 0xff));
 			var count = emu_sprites_count();
 			for (var i = 0; i < count; ++i) {

@@ -413,8 +413,13 @@ impl Processor for CPU {
                 vm.state_mut().store_data(
                     targets[0],
                     &State::with(|c| {
-                        (c.sprites[a]
-                            .collide(&c.sprites[b], c.cartridge_manifest.as_ref().unwrap()))
+                        if c.sprites[a]
+                            .collide(&c.sprites[b], c.cartridge_manifest.as_ref().unwrap())
+                        {
+                            1i16
+                        } else {
+                            0i16
+                        }
                     }),
                 )?;
                 Ok(OpAction::None)

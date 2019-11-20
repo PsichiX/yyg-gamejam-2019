@@ -1,0 +1,10 @@
+0: background
+1: won
+2: lost
+3: cross button
+4: player
+5: blue marble
+6: red marble
+7: green marble
+8: path
+9: point

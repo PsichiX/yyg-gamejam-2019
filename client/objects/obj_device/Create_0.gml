@@ -1,4 +1,4 @@
-self.roms_directory = working_directory + "/roms";
+self.roms_directory = working_directory + "roms";
 self.rom_list = ds_list_create();
 self.current_rom_index = 0;
 self.current_rom_anim_phase = 0;
