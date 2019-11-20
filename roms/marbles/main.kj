@@ -12,6 +12,7 @@
 >
 
 export fn main() <input: i16> {
+  bgc 0 0 0;
   mul 17 6 => PATH_COUNT;
   pass @<init()>;
 
